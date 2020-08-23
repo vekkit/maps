@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="{{lang}}">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Transport map | What is the best transport for your city?</title>
+  <meta name=”description” content="Check how much time and money could you save if use bicycles, e-bikes, car or public transport">
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
+
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+
+  <link href='./css/home.css' rel='stylesheet' />
+  <link href='./css/map.css' rel='stylesheet' />
+  <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500,700,900" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.min.css">
+
+  <meta property="og:title" content="Transport map | What is the best transport for your city?">
+  <meta property="og:description" content="Check how much time and money could you save if use bicycles, e-bikes, car or public transport">
+  <meta property="og:image" content="https://vekkit.com/img/cycling-map.jpg">
+  <meta property="og:url" content="https://vekkit.com/map">
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v1.6.1/mapbox-gl.js"></script>
+  <script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v1.6.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.min.js"></script>
+  <link
+  rel="stylesheet"
+  href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.4.2/mapbox-gl-geocoder.css"
+  type="text/css"
+  />
+  <!-- Promise polyfill script required to use Mapbox GL Geocoder in IE 11 -->
+  <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+
+</head>
+<body>
+  <div id="map"></div>
+  <div id="directions_toggle" class="directions_toggle">
+    <i class="icon icon-menu"></i>
+  </div>
+  <div id="directions" class="directions">
+    <div class="direction_cell">
+      <span class="transport_type_bicycle" id="transport_type_bicycle">
+        <span><img src="./icons/bicycle-15.svg" alt="Electric bicycle directions"></span>
+      </span>
+      <span class="direction_stats">
+        <span class="direction_stats_val tooltip" data-tooltip="Duration" id="cycling-regular_duration">
+          0 min
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="Costs" id="cycling-regular_cost">
+          <span class="base_currency_symbol"></span>0
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="CO2" id="cycling-regular_co2">
+          0 g
+        </span>
+      </span>
+      <span id="bike_settings"><ion-icon name="settings" class="transport_set"></ion-icon></span>
+      <hr class="direction_cell_hr">
+    </div>
+    <div class="direction_cell">
+      <span class="transport_type_ebicycle" id="transport_type_ebicycle">
+        <span><img src="./icons/ebike.svg" alt="Electric bicycle directions"></span>
+      </span>
+      <span class="direction_stats">
+        <span class="direction_stats_val tooltip" data-tooltip="Duration" id="cycling-electric_duration">
+          0 min
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="Costs" id="cycling-electric_cost">
+          <span class="base_currency_symbol"></span>0
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="CO2" id="cycling-electric_co2">
+          0 g
+        </span>
+      </span>
+      <span id="ebike_settings"><ion-icon name="settings" class="transport_set"></ion-icon></span>
+      <hr class="direction_cell_hr">
+    </div>
+    <div class="direction_cell">
+      <span class="transport_type_car" id="transport_type_car">
+        <img src="./icons/car-15.svg" alt="Electric car directions">
+      </span>
+      <span class="direction_stats">
+        <span class="direction_stats_val tooltip" data-tooltip="Duration" id="driving-car_duration">
+          0 min
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="Costs" id="driving-car_cost">
+          <span class="base_currency_symbol"></span>0
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="CO2" id="driving-car_co2">
+          0 g
+        </span>
+      </span>
+      <span id="car_settings"><ion-icon name="settings" class="transport_set"></ion-icon></span>
+      <hr class="direction_cell_hr">
+    </div>
+    <div class="direction_cell">
+      <span class="transport_type_bus" id="transport_type_bus">
+        <img src="./icons/bus-15.svg" alt="Public transport directions">
+      </span>
+      <span class="direction_stats">
+        <span class="direction_stats_val tooltip" data-tooltip="Duration" id="public-transport_duration">
+          0 min
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="Costs" id="public-transport_cost">
+          <span class="base_currency_symbol"></span>0
+        </span>
+        <span class="direction_stats_val tooltip" data-tooltip="CO2" id="public-transport_co2">
+          0 g
+        </span>
+      </span>
+      <span id="public_transport_settings"><ion-icon name="settings" class="transport_set"></ion-icon></span>
+    </div>
+  </div>
+
+  <div id="total_stats_container" class="total_stats_container">
+    <div class="total_stats_cell">
+      <div class="stats_message">If I use <span class="stats_transport_type" id="stats_transport_type_1"></span> instead of   <span class="stats_transport_type" id="stats_transport_type_2"></span>for next <input id="days_amount" value="20" class="days_amount" type="text" placeholder="20">days</div>
+      <span class="save_stats">
+        <span class="save_stats_val tooltip" data-tooltip="Duration" id="duration_save">
+          <div id="save_or_lose_duration_dif" class="save_or_lose">
+            SAVE, MIN
+          </div>
+          <span id="duration_dif">0</span>
+        </span>
+        <span class="save_stats_val tooltip" data-tooltip="Costs" id="cost_save">
+          <div id="save_or_lose_cost_dif" class="save_or_lose">
+            SAVE, <span class="base_currency_symbol" style="text-transform:uppercase;"></span>
+          </div>
+          <span id="cost_dif">0</span>
+        </span>
+        <span class="save_stats_val tooltip" data-tooltip="CO2" id="co2_save">
+          <div id="save_or_lose_co2_dif" class="save_or_lose">
+            REDUCE, KG
+          </div>
+          <span id="co2_dif">0</span>
+        </span>
+      </span>
+    </div>
+  </div>
+  <div class="modal modal-sm" id="car_set_modal">
+    <a class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <a class="close_set_modal btn btn-clear float-right" aria-label="Close"></a>
+        <div class="modal-title h5">Car settings</div>
+      </div>
+      <div class="modal-body">
+        <b>Fuel cost (<span class="base_currency_symbol"></span>):</b> <input id="fuel_cost" value="{{fuel_cost}}" class="days_amount transport_params" type="text" placeholder="{{fuel_cost}}"> / l
+        <br>
+        <b>Fuel consumption:</b> <input id="fuel_consumption" value="{{fuel_consumption}}" class="days_amount transport_params" type="text" placeholder="{{fuel_consumption}}"> l / 100 km
+        <br>
+        <b>CO2:</b> <input id="car_co2" value="{{car_set_modal_co2}}" class="days_amount transport_params" type="text" placeholder="{{car_set_modal_co2}}"> g/km
+        <br>
+        <b>Time to find a parking space:</b> <input id="car_time_parking" value="{{car_time_parking}}" class="days_amount transport_params" type="text" placeholder="{{car_time_parking}}"> min/each stop
+        <div class="modal-footer">
+          <button class="small-rounded-black-button close_set_modal">OK</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal modal-sm" id="ebike_set_modal">
+    <a class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <a class="close_set_modal btn btn-clear float-right" aria-label="Close"></a>
+        <div class="modal-title h5">E-bike settings</div>
+      </div>
+      <div class="modal-body">
+        <b>Cost of electricity (<span class="base_currency_symbol"></span>):</b><input id="electricity_price" value="{{electricity_price}}" class="days_amount transport_params" type="text" placeholder="{{electricity_price}}"> / kWh
+        <br>
+        <b>CO2:</b> <input id="ebike_co2" value="{{ebike_set_modal_co2}}" class="days_amount transport_params" type="text" placeholder="{{ebike_set_modal_co2}}"> g/km
+        <br>
+        <b>Time to find a parking space:</b> <input id="ebike_time_parking" value="{{ebike_time_parking}}" class="days_amount transport_params" type="text" placeholder="{{ebike_time_parking}}"> min/each stop
+        <div class="modal-footer">
+          <button class="small-rounded-black-button close_set_modal">OK</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal modal-sm" id="bike_set_modal">
+    <a class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <a class="close_set_modal btn btn-clear float-right" aria-label="Close"></a>
+        <div class="modal-title h5">Bicycle settings</div>
+      </div>
+      <div class="modal-body">
+        <b>CO2:</b> <input id="bike_co2" value="{{bike_set_modal_co2}}" class="days_amount transport_params" type="text" placeholder="{{bike_set_modal_co2}}"> g/km
+        <br>
+        <b>Time to find a parking space:</b> <input id="bike_time_parking" value="1" class="days_amount transport_params" type="text" placeholder="1"> min/each stop
+        <div class="modal-footer">
+          <button class="small-rounded-black-button close_set_modal">OK</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal modal-sm" id="public_transport_set_modal">
+    <a class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <a class="close_set_modal btn btn-clear float-right" aria-label="Close"></a>
+        <div class="modal-title h5">Public transport settings</div>
+      </div>
+      <div class="modal-body">
+        <b>Ticket price (<span class="base_currency_symbol"></span>):</b> <input id="public_transport_price" value="{{public_transport_price}}" class="days_amount transport_params" type="text" placeholder="{{public_transport_price}}"> / day
+        <br>
+        <b>CO2:</b> <input id="bus_co2" value="{{public_transport_set_modal_co2}}" class="days_amount transport_params" type="text" placeholder="{{public_transport_set_modal_co2}}"> g/km
+        <br>
+        <div class="modal-footer">
+          <button class="small-rounded-black-button close_set_modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-sm" id="stats_transport_set_modal">
+    <a class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <a class="close_set_modal btn btn-clear float-right" aria-label="Close"></a>
+        <div class="modal-title h5">Select a transport type</div>
+      </div>
+      <div class="modal-body p-centered">
+        <div id="transport_type_bicycle_stats_modal" class="chip select_transport">
+          <img src="./icons/bicycle-15.svg" alt="Electric bicycle directions">
+          &nbsp;&nbsp;Bicycle
+        </div>
+        <br>
+        <br>
+        <div id="transport_type_ebicycle_stats_modal" class="chip selected_transport select_transport">
+          <img src="./icons/ebike.svg" alt="Electric bicycle directions">
+          &nbsp;&nbsp;Electric Bicycle
+        </div>
+        <br>
+        <br>
+        <div id="transport_type_car_stats_modal" class="chip select_transport">
+          <img src="./icons/car-15.svg" alt="Electric bicycle directions">
+          &nbsp;&nbsp;Car
+        </div>
+        <br>
+        <br>
+        <div id="transport_type_bus_stats_modal" class="chip select_transport">
+          <img src="./icons/bus-15.svg" alt="Electric bicycle directions">
+          &nbsp;&nbsp;Public Transport
+        </div>
+
+        <div class="modal-footer">
+          <button class="small-rounded-black-button close_set_modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="how_it_works_modal">
+    <a class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title h5">How it works</div>
+      </div>
+      <div class="modal-body">
+        <ul>
+          <li>Right click or long touch a spot on the map to add places you visit every day. For example, your work, university, kindergarten, cafe etc.</li>
+          <li>Add at least 2 points to view how much time and money you can save or lose using different types of transport every day. You can select different types and change the day count.</li>
+          <li>Click or touch <ion-icon name="settings" class="transport_set"></ion-icon> &nbsp;to change transport settings - fuel price, time to find a parking space etc.</li>
+          <li><b>If you want to support this project you can order our <a href="https://vekkit.com">e-bike conversion kit</a></b></li>
+        </ul>
+        <div class="modal-footer">
+          <button class="small-rounded-black-button close_set_modal">Start</button>
+          <button class="small-rounded-black-button close_set_modal">E-bike kit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/ors-js-client.js"></script>
+  <script src="./js/polyline.js"></script>
+
+  <script>
+
+  if(localStorage.getItem('isLaunchedBefore') == '1') {
+  } else {
+    $("#how_it_works_modal").addClass("active");
+    localStorage.setItem('isLaunchedBefore', '1');
+  }
+  //Global vars
+  var stats_transport_type_1 = "transport_type_ebicycle";
+  var stats_transport_type_2 = "transport_type_car";
+  var stats = {};
+  var isSidePanelShowedAlready = false;
+  //Default settings
+  var car_set_modal_co2 = 271;
+  var fuel_cost = 1.0;
+  var fuel_consumption = 6;
+  var car_time_parking = 5;
+
+  var ebike_set_modal_co2 = 18;
+  var ebike_time_parking = 1;
+  var electricity_price = 0.12;
+
+  var bike_set_modal_co2 = 21;
+  var bike_time_parking = 1;
+
+  var public_transport_set_modal_co2 = 100;
+  var public_transport_price = 4;
+
+  var base_currency_symbol = "€";
+  $( ".base_currency_symbol" ).each(function( index ) {
+    $( this ).html(base_currency_symbol + " ");
+  });
+  var exchange_rate = 1;
+
+
+  mapboxgl.accessToken = '{{mapbox_api_key}}';
+  var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/velotton/cjpel7s0w0cj92soyz07xh571', // stylesheet location
+    center: [19.937313, 50.054807], // starting position [lng, lat]
+    zoom: 11 // starting zoom
+  });
+  $.getJSON('https://ipapi.co/json/', function(data){
+    $.getJSON("./data/currency.json", function(currency){
+      var code = data.currency;
+      $.getJSON(`https://api.exchangeratesapi.io/latest?symbols=${code}`, function(rate){
+        exchange_rate = rate.rates[code];
+        //Reload fuel cost
+        $("#fuel_cost").val($("#fuel_cost").val()*exchange_rate);
+        fuel_cost = $("#fuel_cost").val();
+
+        //Reload electricity cost
+        $("#electricity_price").val($("#electricity_price").val()*exchange_rate);
+        electricity_price = $("#electricity_price").val();
+
+        //Reload public transport price
+        $("#public_transport_price").val($("#public_transport_price").val()*exchange_rate);
+        public_transport_price = $("#public_transport_price").val();
+
+      });
+      // the input which contains the code
+      $.each(currency, function(i, v){
+          if(i === code){
+            base_currency_symbol = v.symbol_native;
+            $( ".base_currency_symbol" ).each(function( index ) {
+              $( this ).html(base_currency_symbol + " ");
+            });
+            return;
+          }
+      });
+    });
+
+    if (data.latitude != undefined & data.longitude != undefined){
+        map.flyTo({ center: [data.longitude, data.latitude] });
+    }
+  });
+  map.scrollZoom.disable();
+
+  map.addControl(
+    new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl
+    })
+  );
+
+  if ($(window).width() > 500){
+    toggleSidePanel();
+    map.addControl(new mapboxgl.NavigationControl());
+  }
+
+  var canvas = map.getCanvasContainer();
+  var geojson = {
+    'type': 'FeatureCollection',
+    'features': [
+      {
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [0,0]
+        }
+      }
+    ]
+  };
+
+  var routePoints = [];
+  var publicDirections = [];
+  var draggingSource = "";
+  function onMove(e) {
+    var coords = e.lngLat;
+    // Set a UI indicator for dragging.
+    canvas.style.cursor = 'grabbing';
+    // Update the Point feature in `geojson` coordinates
+    // and call setData to the source layer `point` on it.
+    geojson.features[0].geometry.coordinates = [coords.lng, coords.lat];
+
+    map.getSource(draggingSource).setData(geojson);
+  }
+
+  function onUp(e) {
+    var coords = e.lngLat;
+    //'Longitude: ' + coords.lng + '<br />Latitude: ' + coords.lat;
+    canvas.style.cursor = '';
+    // Unbind mouse/touch events
+    map.off('mousemove', onMove);
+    map.off('touchmove', onMove);
+    for (var i = 0; i < routePoints.length; i++)
+    {
+      var point = routePoints[i];
+      if (point.id == draggingSource){
+        point.coordinates = [coords.lng, coords.lat];
+      }
+    }
+    reloadAllRoutes();
+    draggingSource = "";
+  }
+
+  var nextId = "";
+  var counter = 0;
+
+  //For touches
+  let iosTimeout = null;
+  let clearIosTimeout = () => { clearTimeout(iosTimeout); };
+  map.on('load', function() {
+
+    map.on('contextmenu', function(e) {
+      hanleClicksAndToucnhes(e);
+    });
+
+    map.on('touchstart', (e) => {
+        if (e.originalEvent.touches.length > 1) {
+            return;
+        } else {
+            iosTimeout = setTimeout(() => {
+              clearIosTimeout();
+              hanleClicksAndToucnhes(e);
+            }, 1000);
+        } // end if-else
+    });
+
+    map.on('touchend', clearIosTimeout);
+    map.on('touchcancel', clearIosTimeout);
+    map.on('touchmove', clearIosTimeout);
+
+  });
+
+  function hanleClicksAndToucnhes(e){
+    if (routePoints.length > 0){
+      var prevPoint = routePoints[routePoints.length - 1].coordinates;
+      console.log(prevPoint[0]);
+      if (prevPoint[0] == e.lngLat.lng && prevPoint[1] == e.lngLat.lat){
+        return;
+      }
+    }
+    nextId = 'point' + (counter++)
+    geojson.features[0].geometry.coordinates = [e.lngLat.lng, e.lngLat.lat];
+    map.addSource(nextId, {
+      'type': 'geojson',
+      'data': geojson
+    });
+
+    map.addLayer({
+      'id': nextId,
+      'type': 'circle',
+      'source': nextId,
+      'paint': {
+        'circle-radius': 10,
+        'circle-color': '#000'
+      }
+    });
+
+    map.addLayer({
+      'id': nextId + "text",
+      'type': 'symbol',
+      'source': nextId,
+      'layout': {
+        'text-field': `${counter}`,
+        'text-font': [
+          'Open Sans Bold',
+          'Arial Unicode MS Bold'
+        ],
+        'text-size': 13,
+        'text-transform': 'uppercase'
+      },
+      'paint': {
+        'text-color': '#fff'
+      }
+    });
+
+    var newRoutePoint = {};
+    newRoutePoint.id = nextId;
+    newRoutePoint.coordinates = [e.lngLat.lng, e.lngLat.lat];
+    routePoints.push(newRoutePoint);
+
+    reloadAllRoutes();
+
+    // When the cursor enters a feature in the point layer, prepare for dragging.
+
+    var dragId = nextId;
+    map.on('mouseenter', dragId, function() {
+      map.setPaintProperty(dragId, 'circle-color', '#3bb2d0');
+      canvas.style.cursor = 'move';
+    });
+
+    map.on('mouseleave',dragId, function() {
+      map.setPaintProperty(dragId, 'circle-color', '#000');
+      canvas.style.cursor = '';
+    });
+
+    map.on('mousedown', dragId, function(e) {
+      // Prevent the default map drag behavior.
+      e.preventDefault();
+      canvas.style.cursor = 'grab';
+      draggingSource = dragId;
+      map.on('mousemove', onMove);
+      map.once('mouseup', onUp);
+    });
+
+    map.on('touchstart', dragId, function(e) {
+      draggingSource = dragId;
+      if (e.points.length !== 1) return;
+      // Prevent the default map drag behavior.
+      e.preventDefault();
+      map.on('touchmove', onMove);
+      map.once('touchend', onUp);
+    });
+  }
+
+
+  //Calculate directions
+  async function reloadAllRoutes(){
+
+    if ($(window).width() < 500 && isSidePanelShowedAlready == false && routePoints.length >= 2){
+      isSidePanelShowedAlready = true;
+      toggleSidePanel();
+    }
+
+    calculateDirections("driving-car", "#D72638");
+    //calculateDirections("public-transport", "#FFE13D")
+    calculateDirections("cycling-regular", "#AEC9EB");
+    calculateDirections("cycling-electric", "#28CC88");
+    getPublicTransportDirection();
+  }
+
+  //mkmkg_M6iWi6ELx8hkoNI4S_PgF2BXmlHQ3_mqirOEc
+
+  function getPublicTransportDirection(){
+    if (routePoints.length < 2){
+      return;
+    }
+    //arr.insert(2, 'C');
+
+    var directionsService = new google.maps.DirectionsService;
+    directionsService.route({
+      origin: `${routePoints[routePoints.length - 2].coordinates[1]},${routePoints[routePoints.length - 2].coordinates[0]}`,
+      destination: `${routePoints[routePoints.length - 1].coordinates[1]},${routePoints[routePoints.length - 1].coordinates[0]}`,
+      travelMode: 'TRANSIT'
+    }, function(response, status) {
+      if (status === 'OK') {
+        // See the data in the console
+        console.log(response);
+
+        //Add new direction
+        var directionIndex = routePoints.length - 2;
+        var geojson = polyline.decode(response.routes[0].overview_polyline);
+        var loadedProfile = "public-transport-" + (directionIndex);
+        var duration = Math.floor(response.routes[0].legs[0].duration.value/60) ;
+        var distance = response.routes[0].legs[0].distance.value/1000;
+
+        var newDirection = {};
+        newDirection.geojson = geojson;
+        newDirection.duration = duration;
+        newDirection.distance = distance;
+        publicDirections.insert(directionIndex, newDirection);
+        console.log(newDirection);
+        drawPolyline(geojson, loadedProfile, "#FFE13D",0);
+
+        reloadPublicTransportStats();
+
+      } else {
+        window.confirm('Cannot load a route for public transport in this area.');
+      }
+    });
+  }
+
+  function reloadPublicTransportStats(){
+    var totalDuration = 0;
+    var totalDistance = 0;
+
+    for (var i = 0; i < publicDirections.length; i++)
+    {
+      var direction = publicDirections[i];
+      totalDuration += direction.duration;
+      totalDistance += direction.distance;
+    }
+
+    var cost =  parseInt(public_transport_price).toFixed(2);
+    $("#public-transport_duration").html(totalDuration + " min");
+    $("#public-transport_cost").html(base_currency_symbol + " " + cost);
+
+    var co2 = totalDistance*public_transport_set_modal_co2;
+    $("#public-transport_co2").html((co2/1000).toFixed(2) + " kg");
+
+    stats["transport_type_bus_duration"] = totalDuration;
+    stats["transport_type_bus_cost"] = cost;
+    stats["transport_type_bus_co2"] = totalDistance*public_transport_set_modal_co2;
+
+    drawPolyline(geojson, "public_transport", "#FFE13D",0);
+    reloadBottomStats();
+  }
+
+
+  function calculateDirections(profile, color){
+
+    if (routePoints.length < 2){
+      return;
+    }
+
+    let orsDirections = new Openrouteservice.Directions({
+      api_key: "5b3ce3597851110001cf6248e76a03f42c6d4e6189b45698758d0279"
+    });
+    var coordinatesToUpload = [];
+    for (var i = 0; i < routePoints.length; i++)
+    {
+      coordinatesToUpload.push(routePoints[i].coordinates);
+    }
+
+    orsDirections.calculate({
+      coordinates: coordinatesToUpload,
+      profile: profile,
+      format: "json"
+    })
+    .then(function(json) {
+      var geojson = polyline.decode(json.routes[0].geometry);
+      var loadedProfile = json.metadata.query.profile;
+      var duration = Math.floor(json.routes[0].summary.duration/60) ;
+      var lineOffset = 0
+      console.log(loadedProfile + " speed: " + (json.routes[0].summary.distance/1000)/(json.routes[0].summary.duration/3600));
+
+      var distance = json.routes[0].summary.distance/1000;
+      if (loadedProfile == "driving-car"){
+
+        duration += coordinatesToUpload.length * car_time_parking;
+        $("#" + loadedProfile + "_duration").html(duration + " min");
+
+        var cost = (fuel_consumption*fuel_cost*distance/100).toFixed(2);
+        $("#" + loadedProfile + "_cost").html(base_currency_symbol + " " + cost);
+
+        var co2 = distance*car_set_modal_co2;
+        $("#" + loadedProfile + "_co2").html((co2/1000).toFixed(2) + " kg");
+
+        stats[loadedProfile + "_cost"] = cost;
+        stats["transport_type_car_cost"] = cost;
+        stats["transport_type_car_duration"] = duration;
+        stats["transport_type_car_co2"] = co2;
+
+        if (distance == undefined){
+            confirm("Cannot load a route for a car. Try later.");
+            stats[loadedProfile + "_cost"] = 0;
+            stats["transport_type_car_cost"] = 0;
+            stats["transport_type_car_duration"] = 0;
+            stats["transport_type_car_co2"] = 0;
+        }
+      }else if (loadedProfile == "cycling-electric"){
+        lineOffset = 3;
+        //30km on one battery
+        var cost = (distance/30)*0.25*electricity_price; //0.25 - квт/ч
+        $("#" + loadedProfile + "_cost").html(base_currency_symbol + " " + cost.toFixed(3));
+        //Add max speed for e-bike in settings
+        duration = duration - Math.floor(duration*(1 - 22.0/25.0));
+        duration += coordinatesToUpload.length * ebike_time_parking;
+        $("#" + loadedProfile + "_duration").html(duration + " min");
+
+        var co2 = distance*ebike_set_modal_co2;
+        $("#" + loadedProfile + "_co2").html((co2/1000).toFixed(2) + " kg");
+
+        stats["transport_type_ebicycle_cost"] = cost;
+        stats["transport_type_ebicycle_duration"] = duration;
+        stats["transport_type_ebicycle_co2"] = co2;
+      }else if (loadedProfile == "cycling-regular"){
+
+        var co2 = distance*bike_set_modal_co2;
+        $("#" + loadedProfile + "_co2").html((co2/1000).toFixed(2) + " kg");
+
+        duration += coordinatesToUpload.length * bike_time_parking;
+        $("#" + loadedProfile + "_duration").html(duration + " min");
+
+        stats["transport_type_bicycle_cost"] = 0;
+        stats["transport_type_bicycle_duration"] = duration;
+        stats["transport_type_bicycle_co2"] = co2;
+
+      }
+
+      drawPolyline(geojson, loadedProfile, color, lineOffset);
+      reloadBottomStats();
+    })
+    .catch(function(err) {
+      console.error(err);
+    });
+
+  }
+
+  function drawPolyline(geojson, loadedProfile, color, lineOffset){
+    var coordinates = [];
+    for (var i = 0; i < geojson.length; i++)
+    {
+      coordinates.push([geojson[i][1], geojson[i][0]]);
+    }
+
+    var routeSource = {
+      'type': 'geojson',
+      'data': {
+        'type': 'Feature',
+        'properties': {},
+        'geometry': {
+          'type': 'LineString',
+          'coordinates': coordinates
+        }
+      }
+    };
+    var routeLayer = map.getLayer(loadedProfile);
+    if (routeLayer == undefined){
+      map.addSource(loadedProfile, routeSource);
+      map.addLayer({
+        'id': loadedProfile,
+        'type': 'line',
+        'source': loadedProfile,
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': color,
+          'line-width': 3,
+          'line-offset': lineOffset
+        }
+      });
+
+      for (var i = counter - 1; i >= 0; i--)
+      {
+        var layername = 'point' + i;
+        map.moveLayer(loadedProfile, layername);
+      }
+
+    }else{
+      map.getSource(loadedProfile).setData({
+        'type': 'Feature',
+        'properties': {},
+        'geometry': {
+          'type': 'LineString',
+          'coordinates': coordinates
+        }
+      });
+    }
+  }
+
+  Array.prototype.insert = function ( index, item ) {
+    this.splice( index, 0, item );
+  };
+reloadBottomStats();
+//Stats settings
+function reloadBottomStats(){
+    var statsTransportType1 = $("#" + stats_transport_type_1);
+    $("#stats_transport_type_1").html(statsTransportType1.clone());
+
+    var statsTransportType2 = $("#" + stats_transport_type_2);
+    $("#stats_transport_type_2").html(statsTransportType2.clone());
+
+    if (stats[stats_transport_type_1 + "_cost"] == undefined){
+      return;
+    }
+
+    var dCost = stats[stats_transport_type_1 + "_cost"] - stats[stats_transport_type_2 + "_cost"];
+    if (dCost < 0){
+      $("#save_or_lose_cost_dif").html("SAVE, " + base_currency_symbol.toUpperCase());
+    }else{
+      $("#save_or_lose_cost_dif").html("LOSE, " + base_currency_symbol.toUpperCase());
+    }
+    var dDuration = stats[stats_transport_type_1 + "_duration"] - stats[stats_transport_type_2 + "_duration"];
+    if (dDuration < 0){
+      $("#save_or_lose_duration_dif").html("SAVE, MIN");
+    }else{
+      $("#save_or_lose_duration_dif").html("LOSE, MIN");
+    }
+    var dCO2 = (stats[stats_transport_type_1 + "_co2"] - stats[stats_transport_type_2 + "_co2"])*$("#days_amount").val();
+    var co2_mensure = "G";
+    if (dCO2 > 999 || dCO2 < -999){
+      co2_mensure = "KG";
+      dCO2 = dCO2 / 1000;
+    }
+
+    if (dCO2 < 0){
+      $("#save_or_lose_co2_dif").html("REDUCE, " + co2_mensure);
+    }else{
+      $("#save_or_lose_co2_dif").html("INCREASE, " + co2_mensure);
+    }
+    $("#duration_dif").html(Math.abs(dDuration)*$("#days_amount").val());
+    $("#cost_dif").html((Math.abs(dCost)*$("#days_amount").val()).toFixed(2));
+    $("#co2_dif").html((Math.abs(dCO2)).toFixed(2));
+
+}
+
+var activeStatsTransportType = 1; //if 1 - user clicked on the first icon, 2 - on the second
+
+$( "#stats_transport_type_1" ).click(function() {
+  setupUIStatsSettings();
+  activeStatsTransportType = 1;
+  $( "#" + stats_transport_type_1 + "_stats_modal" ).addClass("selected_transport");
+  $( "#stats_transport_set_modal" ).addClass("active");
+});
+
+$( "#stats_transport_type_2" ).click(function() {
+  setupUIStatsSettings();
+  activeStatsTransportType = 2;
+  $( "#" + stats_transport_type_2 + "_stats_modal" ).addClass("selected_transport");
+  $( "#stats_transport_set_modal" ).addClass("active");
+});
+
+$( ".select_transport").click(function() {
+  setupUIStatsSettings();
+  var transport_type_name = $( this ).attr('id').replace("_stats_modal", "");
+  $( this ).addClass("selected_transport");
+  if (activeStatsTransportType == 1){
+    stats_transport_type_1 = transport_type_name;
+  }else if (activeStatsTransportType == 2){
+    stats_transport_type_2 = transport_type_name;
+  }
+  console.log(stats_transport_type_2);
+  reloadBottomStats();
+});
+
+function setupUIStatsSettings(){
+  $( ".select_transport" ).each(function( index ) {
+      $( this ).removeClass("selected_transport");
+  });
+}
+
+$( "#days_amount" ).change(function() {
+  reloadBottomStats();
+});
+
+$( ".transport_params" ).change(function() {
+  //car_time_parking
+  car_set_modal_co2 = $("#car_co2").val();
+  fuel_consumption = $("#fuel_consumption").val();
+  fuel_cost = $("#fuel_cost").val();
+  car_time_parking = $("#car_time_parking").val();
+
+  ebike_set_modal_co2 = $("#ebike_co2").val();
+  electricity_price = $("#electricity_price").val();
+  ebike_time_parking = $("#ebike_time_parking").val();
+
+  bike_set_modal_co2 = $("#bike_co2").val();
+  bike_time_parking = $("#bike_time_parking").val();
+
+  public_transport_set_modal_co2 = $("#bus_co2").val();
+  public_transport_price = $("#public_transport_price").val();
+
+  calculateDirections("driving-car", "#D72638");
+  calculateDirections("cycling-regular", "#AEC9EB");
+  calculateDirections("cycling-electric", "#28CC88");
+  reloadPublicTransportStats();
+
+});
+
+//Transport settings
+  $( "#bike_settings" ).click(function() {
+    $( "#bike_set_modal" ).addClass("active");
+  });
+
+  $( "#car_settings" ).click(function() {
+    $( "#car_set_modal" ).addClass("active");
+  });
+
+  $( "#ebike_settings" ).click(function() {
+    $( "#ebike_set_modal" ).addClass("active");
+  });
+
+  $( "#public_transport_settings" ).click(function() {
+    $( "#public_transport_set_modal" ).addClass("active");
+  });
+
+  $( ".close_set_modal" ).click(function() {
+    $( "#car_set_modal" ).removeClass("active");
+    $( "#bike_set_modal" ).removeClass("active");
+    $( "#ebike_set_modal" ).removeClass("active");
+    $( "#public_transport_set_modal" ).removeClass("active");
+    $( "#stats_transport_set_modal" ).removeClass("active");
+    $( "#how_it_works_modal" ).removeClass("active");
+  });
+
+  function toggleSidePanel(){
+    isSidePanelShowedAlready = true;
+    if ($("#directions_toggle").position().left > 20){
+      $( "#directions" ).animate({
+        left: "-300px"
+      }, 300 );
+      $( "#total_stats_container" ).animate({
+        left: "-300px"
+      }, 300 );
+      $( "#directions_toggle" ).animate({
+        left: "20px"
+      }, 300 );
+    }else{
+      $( "#directions" ).animate({
+        left: "20px"
+      }, 300 );
+      $( "#total_stats_container" ).animate({
+        left: "20px"
+      }, 300 );
+      $( "#directions_toggle" ).animate({
+        left: "340px"
+      }, 300 );
+    }
+  }
+
+  $("#directions_toggle").click(function() {
+    toggleSidePanel();
+  });
+
+  </script>
+  <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key={{g_maps_api_key}}></script>
+</body>
+</html>
